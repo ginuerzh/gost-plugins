@@ -1,9 +1,9 @@
-package main
+package ingress
 
 import (
 	"context"
-	"flag"
-	"log"
+	"fmt"
+	"log/slog"
 	"net"
 	"strings"
 	"time"
@@ -15,17 +15,37 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	addr            = flag.String("addr", ":8000", "The server addr")
-	redisAddr       = flag.String("redis.addr", "127.0.0.1:6379", "redis addr")
-	redisDB         = flag.Int("redis.db", 0, "redis db")
-	redisExpiration = flag.Duration("redis.expiration", time.Hour, "redis key expiration")
-	domain          = flag.String("domain", "", "domain name e.g. gost.plus")
-)
+type Options struct {
+	RedisAddr       string
+	RedisDB         int
+	RedisExpiration time.Duration
+	Domain          string
+}
 
 type server struct {
 	client *redis.Client
 	ingress_proto.UnimplementedIngressServer
+	opts *Options
+}
+
+func ListenAndServe(addr string, opts *Options) error {
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	slog.Info(fmt.Sprintf("server listening on %v", ln.Addr()))
+
+	s := grpc.NewServer()
+	srv := &server{
+		client: redis.NewClient(&redis.Options{
+			Addr: opts.RedisAddr,
+			DB:   opts.RedisDB,
+		}),
+		opts: opts,
+	}
+
+	ingress_proto.RegisterIngressServer(s, srv)
+	return s.Serve(ln)
 }
 
 func (s *server) Set(ctx context.Context, in *ingress_proto.SetRequest) (*ingress_proto.SetReply, error) {
@@ -41,8 +61,8 @@ func (s *server) Set(ctx context.Context, in *ingress_proto.SetRequest) (*ingres
 		host = v
 	}
 
-	s.client.SetNX(ctx, host, tid.String(), *redisExpiration)
-	log.Printf("set: %s -> %s -> %s", in.Host, host, tid.String())
+	s.client.SetNX(ctx, host, tid.String(), s.opts.RedisExpiration)
+	slog.Debug(fmt.Sprintf("set: %s -> %s -> %s", in.Host, host, tid.String()))
 	return reply, nil
 }
 
@@ -55,36 +75,15 @@ func (s *server) Get(ctx context.Context, in *ingress_proto.GetRequest) (*ingres
 	reply := &ingress_proto.GetReply{}
 
 	var key string
-	if strings.HasSuffix(host, *domain) {
+	if strings.HasSuffix(host, s.opts.Domain) {
 		if n := strings.IndexByte(host, '.'); n > 0 {
 			key = host[:n]
 		}
 		reply.Endpoint, _ = s.client.Get(ctx, key).Result()
 	}
 
-	log.Printf("ingress: %s -> %s -> %s", in.Host, key, reply.Endpoint)
+	slog.Debug(fmt.Sprintf("ingress: %s -> %s -> %s", in.Host, key, reply.Endpoint))
 	return reply, nil
-}
-
-func main() {
-	flag.Parse()
-
-	lis, err := net.Listen("tcp", *addr)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	s := grpc.NewServer()
-	srv := &server{
-		client: redis.NewClient(&redis.Options{
-			Addr: *redisAddr,
-			DB:   *redisDB,
-		}),
-	}
-	ingress_proto.RegisterIngressServer(s, srv)
-	log.Printf("server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
 }
 
 func parseTunnelID(s string) (tid relay.TunnelID) {
