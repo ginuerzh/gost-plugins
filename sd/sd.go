@@ -181,7 +181,7 @@ func (s *server) Renew(ctx context.Context, in *sd_proto.RenewRequest) (*sd_prot
 
 	s.client.Expire(ctx, srv.Name, s.opts.RedisExpiration)
 
-	log.Info(fmt.Sprintf("renew tunnel=%s, connector=%s", srv.Id, srv.Name))
+	log.Info(fmt.Sprintf("renew tunnel=%s, connector=%s", srv.Name, srv.Id))
 	reply.Ok = true
 
 	return reply, nil

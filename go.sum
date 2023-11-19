@@ -5,10 +5,8 @@ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/r
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/fsnotify/fsnotify v1.6.0 h1:n+5WquG0fcWoWp6xPWfHdbskMCQaFnG6PfBrh1Ky4HY=
 github.com/fsnotify/fsnotify v1.6.0/go.mod h1:sl3t1tCWJFWoRz9R8WJCbQihKKwmorjAbSClcnxKAGw=
-github.com/go-gost/plugin v0.0.0-20231031145754-4c25027b8b97 h1:p9dmeWsNwKcbIwwUUumD5a7HlZFODBwnMItBGuJ+P5M=
-github.com/go-gost/plugin v0.0.0-20231031145754-4c25027b8b97/go.mod h1:qXr2Zm9Ex2ATqnWuNUzVZqySPMnuIihvblYZt4MlZLw=
-github.com/go-gost/plugin v0.0.0-20231102125124-a1cc7a13e066 h1:/pDM9JP9ESSRuAr237yAXB6WiDdjEeulDkaLa9Gw0ss=
-github.com/go-gost/plugin v0.0.0-20231102125124-a1cc7a13e066/go.mod h1:qXr2Zm9Ex2ATqnWuNUzVZqySPMnuIihvblYZt4MlZLw=
+github.com/go-gost/plugin v0.0.0-20231119062132-d959ab54847f h1:V5m5plmwkIt16B251Eg2cK2UOJ1IRe4fNuWdTCqn8ek=
+github.com/go-gost/plugin v0.0.0-20231119062132-d959ab54847f/go.mod h1:qXr2Zm9Ex2ATqnWuNUzVZqySPMnuIihvblYZt4MlZLw=
 github.com/go-gost/relay v0.4.0 h1:zSOqJqnwV63oRiQ6fuurDYvehAVi3PizzFeE1gT+qo4=
 github.com/go-gost/relay v0.4.0/go.mod h1:lcX+23LCQ3khIeASBo+tJ/WbwXFO32/N5YN6ucuYTG8=
 github.com/go-redis/redis/v8 v8.11.5 h1:AcZZR7igkdvfVmQTPnu9WE37LRrO/YrBH5zWyjDC0oI=

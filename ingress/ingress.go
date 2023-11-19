@@ -48,8 +48,8 @@ func ListenAndServe(addr string, opts *Options) error {
 	return s.Serve(ln)
 }
 
-func (s *server) Set(ctx context.Context, in *ingress_proto.SetRequest) (*ingress_proto.SetReply, error) {
-	reply := &ingress_proto.SetReply{}
+func (s *server) SetRule(ctx context.Context, in *ingress_proto.SetRuleRequest) (*ingress_proto.SetRuleReply, error) {
+	reply := &ingress_proto.SetRuleReply{}
 
 	tid := parseTunnelID(in.Endpoint)
 	if in.Host == "" || tid.IsZero() {
@@ -66,13 +66,13 @@ func (s *server) Set(ctx context.Context, in *ingress_proto.SetRequest) (*ingres
 	return reply, nil
 }
 
-func (s *server) Get(ctx context.Context, in *ingress_proto.GetRequest) (*ingress_proto.GetReply, error) {
+func (s *server) GetRule(ctx context.Context, in *ingress_proto.GetRuleRequest) (*ingress_proto.GetRuleReply, error) {
 	host := in.Host
 	if v, _, _ := net.SplitHostPort(in.Host); v != "" {
 		host = v
 	}
 
-	reply := &ingress_proto.GetReply{}
+	reply := &ingress_proto.GetRuleReply{}
 
 	var key string
 	if strings.HasSuffix(host, s.opts.Domain) {

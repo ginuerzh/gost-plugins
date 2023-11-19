@@ -3,7 +3,7 @@ module github.com/ginuerzh/gost-plugins
 go 1.21.2
 
 require (
-	github.com/go-gost/plugin v0.0.0-20231102125124-a1cc7a13e066
+	github.com/go-gost/plugin v0.0.0-20231119062132-d959ab54847f
 	github.com/go-gost/relay v0.4.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.1
