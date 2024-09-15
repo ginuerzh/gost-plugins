@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ginuerzh/gost-plugins/ingress"
+	"github.com/ginuerzh/gost-plugins/recorder"
 	"github.com/ginuerzh/gost-plugins/sd"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +18,10 @@ var (
 	redisDB         int
 	redisExpiration time.Duration
 	domain          string
+
+	mongoURI string
+	mongoDB  string
+	Timeout  time.Duration
 
 	// log flags
 	logLevel  string
@@ -102,5 +107,21 @@ func init() {
 	sdCmd.Flags().IntVar(&redisDB, "redis.db", 0, "redis database")
 	sdCmd.Flags().DurationVar(&redisExpiration, "redis.expiration", time.Minute, "redis key expiration")
 
-	rootCmd.AddCommand(ingressCmd, sdCmd)
+	recorderCmd := &cobra.Command{
+		Use:   "recorder",
+		Short: "Recorder plugin",
+		Long:  "Recorder plugin HTTP service",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return recorder.ListenAndServe(addr, &recorder.Options{
+				MongoURI: mongoURI,
+				MongoDB:  mongoDB,
+				Timeout:  Timeout,
+			})
+		},
+	}
+	recorderCmd.Flags().StringVar(&mongoURI, "mongo.uri", "mongodb://127.0.0.1:27017", "MongoDB server address")
+	recorderCmd.Flags().StringVar(&mongoDB, "mongo.db", "gost", "MongoDB database")
+	recorderCmd.Flags().DurationVar(&Timeout, "mongo.timeout", 10*time.Second, "MongoDB connection timeout")
+
+	rootCmd.AddCommand(ingressCmd, sdCmd, recorderCmd)
 }
