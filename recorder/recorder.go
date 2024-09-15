@@ -10,7 +10,6 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -122,7 +121,6 @@ type DNSRecorderObject struct {
 }
 
 type HandlerRecorderObject struct {
-	ID         primitive.ObjectID  `json:"-" bson:"_id"`
 	Node       string              `json:"node,omitempty"`
 	Service    string              `json:"service"`
 	Network    string              `json:"network"`
