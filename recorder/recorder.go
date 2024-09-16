@@ -92,11 +92,13 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type HTTPRequestRecorderObject struct {
 	ContentLength int64       `json:"contentLength"`
 	Header        http.Header `json:"header"`
+	Body          []byte      `json:"body"`
 }
 
 type HTTPResponseRecorderObject struct {
 	ContentLength int64       `json:"contentLength"`
 	Header        http.Header `json:"header"`
+	Body          []byte      `json:"body"`
 }
 
 type HTTPRecorderObject struct {
