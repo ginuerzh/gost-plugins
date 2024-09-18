@@ -21,6 +21,8 @@ var (
 
 	mongoURI string
 	mongoDB  string
+	lokiURL  string
+	lokiID   string
 	Timeout  time.Duration
 
 	// log flags
@@ -115,13 +117,17 @@ func init() {
 			return recorder.ListenAndServe(addr, &recorder.Options{
 				MongoURI: mongoURI,
 				MongoDB:  mongoDB,
+				LokiURL:  lokiURL,
+				LokiID:   lokiID,
 				Timeout:  Timeout,
 			})
 		},
 	}
-	recorderCmd.Flags().StringVar(&mongoURI, "mongo.uri", "mongodb://127.0.0.1:27017", "MongoDB server address")
+	recorderCmd.Flags().StringVar(&mongoURI, "mongo.uri", "", "MongoDB server address, e.g. mongodb://127.0.0.1:27017")
 	recorderCmd.Flags().StringVar(&mongoDB, "mongo.db", "gost", "MongoDB database")
-	recorderCmd.Flags().DurationVar(&Timeout, "mongo.timeout", 10*time.Second, "MongoDB connection timeout")
+	recorderCmd.Flags().StringVar(&lokiURL, "loki.url", "", "Loki URL, e.g. http://localhost:3100/loki/api/v1/push")
+	recorderCmd.Flags().StringVar(&lokiID, "loki.id", "gost", "Loki tenant ID, the X-Scope-OrgID http request header")
+	recorderCmd.Flags().DurationVar(&Timeout, "timeout", 10*time.Second, "connection timeout")
 
 	rootCmd.AddCommand(ingressCmd, sdCmd, recorderCmd)
 }
