@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -116,14 +117,33 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		return nil
 	}
 
+	md := lokiMetadata{
+		ClientID: o.ClientID,
+		ClientIP: o.ClientIP,
+		Node:     o.Node,
+		SID:      o.SID,
+	}
 	var msg string
 	if o.HTTP != nil {
-		msg = fmt.Sprintf("%s %s %s %s %s %d %d %v %s",
-			o.RemoteAddr, o.HTTP.Method, o.HTTP.Host, o.HTTP.URI, o.HTTP.Proto, o.HTTP.StatusCode, o.HTTP.Response.ContentLength, o.Duration, o.Err)
+		msg = fmt.Sprintf("%s %s %s %s %s %d %d %d %v %s",
+			o.ClientIP, o.HTTP.Method, o.HTTP.Host, o.HTTP.URI, o.HTTP.Proto, o.HTTP.StatusCode, o.HTTP.Request.ContentLength, o.HTTP.Response.ContentLength, o.Duration, o.Err)
+
+		buf := bytes.Buffer{}
+		if h := o.HTTP.Request.Header; h != nil {
+			o.HTTP.Request.Header.Write(&buf)
+			md.HTTPRequestHeader = buf.String()
+		}
+		if h := o.HTTP.Response.Header; h != nil {
+			buf.Reset()
+			o.HTTP.Response.Header.Write(&buf)
+			md.HTTPResponseHeader = buf.String()
+		}
 	} else if o.DNS != nil {
-		msg = fmt.Sprintf("%s %s %s %v %s %v %s", o.RemoteAddr, o.Host, o.DNS.Name, o.DNS.Cached, o.DNS.Question, o.Duration, o.Err)
+		msg = fmt.Sprintf("%s %s %s %s %s %d %v %s", o.ClientIP, o.Host, strings.TrimSuffix(o.DNS.Name, "."), o.DNS.Class, o.DNS.Type, o.DNS.ID, o.Duration, o.Err)
+		md.DNSQuestion = o.DNS.Question
+		md.DNSAnswer = o.DNS.Answer
 	} else {
-		msg = fmt.Sprintf("%s %s %v %s", o.RemoteAddr, o.Host, o.Duration, o.Err)
+		msg = fmt.Sprintf("%s %s %v %s", o.ClientIP, o.Host, o.Duration, o.Err)
 	}
 
 	body := lokiBody{
@@ -134,12 +154,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 					{
 						strconv.FormatInt(o.Time.UnixNano(), 10),
 						msg,
-						lokiMetadata{
-							ClientID: o.ClientID,
-							ClientIP: o.ClientIP,
-							Node:     o.Node,
-							SID:      o.SID,
-						},
+						md,
 					},
 				},
 			},
@@ -235,8 +250,12 @@ type lokiStreamObject struct {
 }
 
 type lokiMetadata struct {
-	Node     string `json:"node"`
-	ClientID string `json:"client_id"`
-	ClientIP string `json:"client_ip"`
-	SID      string `json:"sid"`
+	Node               string `json:"node,omitempty"`
+	ClientID           string `json:"client_id,omitempty"`
+	ClientIP           string `json:"client_ip"`
+	SID                string `json:"sid"`
+	HTTPRequestHeader  string `json:"http_request_header,omitempty"`
+	HTTPResponseHeader string `json:"http_response_header,omitempty"`
+	DNSQuestion        string `json:"dns_question,omitempty"`
+	DNSAnswer          string `json:"dns_answer,omitempty"`
 }
