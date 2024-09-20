@@ -138,10 +138,15 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 			o.HTTP.Response.Header.Write(&buf)
 			md.HTTPResponseHeader = buf.String()
 		}
+	} else if o.TLS != nil {
+		msg = fmt.Sprintf("%s %s %s %s %v %s", o.ClientIP, o.Host, o.TLS.Version, o.TLS.Proto, o.Duration, o.Err)
+		md.TLSCipherSuite = o.TLS.CipherSuite
+		md.TLSVersion = o.TLS.Version
 	} else if o.DNS != nil {
-		msg = fmt.Sprintf("%s %s %s %s %s %d %v %s", o.ClientIP, o.Host, strings.TrimSuffix(o.DNS.Name, "."), o.DNS.Class, o.DNS.Type, o.DNS.ID, o.Duration, o.Err)
+		msg = fmt.Sprintf("%s %s %s %s %s %v %s", o.ClientIP, o.Host, strings.TrimSuffix(o.DNS.Name, "."), o.DNS.Class, o.DNS.Type, o.Duration, o.Err)
 		md.DNSQuestion = o.DNS.Question
 		md.DNSAnswer = o.DNS.Answer
+		md.DNSCached = fmt.Sprintf("%v", o.DNS.Cached)
 	} else {
 		msg = fmt.Sprintf("%s %s %v %s", o.ClientIP, o.Host, o.Duration, o.Err)
 	}
@@ -209,6 +214,14 @@ type HTTPRecorderObject struct {
 	Response   HTTPResponseRecorderObject `json:"response"`
 }
 
+type TLSRecorderObject struct {
+	ServerName        string `json:"serverName"`
+	CipherSuite       string `json:"cipherSuite"`
+	CompressionMethod uint8  `json:"compressionMethod"`
+	Proto             string `json:"proto"`
+	Version           string `json:"version"`
+}
+
 type DNSRecorderObject struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
@@ -230,6 +243,7 @@ type HandlerRecorderObject struct {
 	ClientID   string              `json:"clientID,omitempty"`
 	HTTP       *HTTPRecorderObject `json:"http,omitempty"`
 	DNS        *DNSRecorderObject  `json:"dns,omitempty"`
+	TLS        *TLSRecorderObject  `json:"tls,omitempty"`
 	Err        string              `json:"err,omitempty"`
 	Duration   time.Duration       `json:"duration"`
 	SID        string              `json:"sid"`
@@ -256,6 +270,9 @@ type lokiMetadata struct {
 	SID                string `json:"sid"`
 	HTTPRequestHeader  string `json:"http_request_header,omitempty"`
 	HTTPResponseHeader string `json:"http_response_header,omitempty"`
+	TLSCipherSuite     string `json:"tls_cipher_suite,omitempty"`
+	TLSVersion         string `json:"tls_version,omitempty"`
 	DNSQuestion        string `json:"dns_question,omitempty"`
 	DNSAnswer          string `json:"dns_answer,omitempty"`
+	DNSCached          string `json:"dns_cached,omitempty"`
 }
