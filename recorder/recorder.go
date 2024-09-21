@@ -122,7 +122,12 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		ClientIP: o.ClientIP,
 		Node:     o.Node,
 		SID:      o.SID,
+		Duration: strconv.FormatInt(o.Duration.Nanoseconds(), 10),
 	}
+	if o.Err != "" {
+		md.Error = "true"
+	}
+
 	var msg string
 	if o.HTTP != nil {
 		msg = fmt.Sprintf("%s %s %s %s %s %d %d %d %v %s",
@@ -275,4 +280,6 @@ type lokiMetadata struct {
 	DNSQuestion        string `json:"dns_question,omitempty"`
 	DNSAnswer          string `json:"dns_answer,omitempty"`
 	DNSCached          string `json:"dns_cached,omitempty"`
+	Error              string `json:"error,omitempty"`
+	Duration           string `json:"duration"`
 }
