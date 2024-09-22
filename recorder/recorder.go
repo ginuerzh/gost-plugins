@@ -123,6 +123,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		Node:     o.Node,
 		SID:      o.SID,
 		Duration: strconv.FormatInt(o.Duration.Nanoseconds(), 10),
+		Ts:       o.Time,
 	}
 	if o.Err != "" {
 		md.Error = "true"
@@ -162,7 +163,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 				Stream: lokiStreamObject{Service: o.Service},
 				Values: [][]interface{}{
 					{
-						strconv.FormatInt(o.Time.UnixNano(), 10),
+						strconv.FormatInt(time.Now().UnixNano(), 10),
 						msg,
 						md,
 					},
@@ -265,21 +266,22 @@ type lokiStream struct {
 }
 
 type lokiStreamObject struct {
-	Service string `json:"service"`
+	Service string `json:"service_name"`
 }
 
 type lokiMetadata struct {
-	Node               string `json:"node,omitempty"`
-	ClientID           string `json:"client_id,omitempty"`
-	ClientIP           string `json:"client_ip"`
-	SID                string `json:"sid"`
-	HTTPRequestHeader  string `json:"http_request_header,omitempty"`
-	HTTPResponseHeader string `json:"http_response_header,omitempty"`
-	TLSCipherSuite     string `json:"tls_cipher_suite,omitempty"`
-	TLSVersion         string `json:"tls_version,omitempty"`
-	DNSQuestion        string `json:"dns_question,omitempty"`
-	DNSAnswer          string `json:"dns_answer,omitempty"`
-	DNSCached          string `json:"dns_cached,omitempty"`
-	Error              string `json:"error,omitempty"`
-	Duration           string `json:"duration"`
+	Node               string    `json:"node,omitempty"`
+	ClientID           string    `json:"client_id,omitempty"`
+	ClientIP           string    `json:"client_ip"`
+	SID                string    `json:"sid"`
+	HTTPRequestHeader  string    `json:"http_request_header,omitempty"`
+	HTTPResponseHeader string    `json:"http_response_header,omitempty"`
+	TLSCipherSuite     string    `json:"tls_cipher_suite,omitempty"`
+	TLSVersion         string    `json:"tls_version,omitempty"`
+	DNSQuestion        string    `json:"dns_question,omitempty"`
+	DNSAnswer          string    `json:"dns_answer,omitempty"`
+	DNSCached          string    `json:"dns_cached,omitempty"`
+	Error              string    `json:"error,omitempty"`
+	Duration           string    `json:"duration"`
+	Ts                 time.Time `json:"ts"`
 }
