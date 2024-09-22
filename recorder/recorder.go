@@ -226,6 +226,8 @@ type TLSRecorderObject struct {
 	CompressionMethod uint8  `json:"compressionMethod"`
 	Proto             string `json:"proto"`
 	Version           string `json:"version"`
+	ClientHello       string `json:"clientHello"`
+	ServerHello       string `json:"serverHello"`
 }
 
 type DNSRecorderObject struct {
