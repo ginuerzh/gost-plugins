@@ -145,11 +145,28 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 			md.HTTPResponseHeader = buf.String()
 		}
 	} else if o.TLS != nil {
-		msg = fmt.Sprintf("%s %s %s %s %v %s", o.ClientIP, o.Host, o.TLS.Version, o.TLS.Proto, o.Duration, o.Err)
+		host := o.Host
+		if host == "" {
+			host = "-"
+		}
+		version := o.TLS.Version
+		if version == "" {
+			version = "-"
+		}
+		proto := o.TLS.Proto
+		if proto == "" {
+			proto = "-"
+		}
+
+		msg = fmt.Sprintf("%s %s %s %s %v %s", o.ClientIP, host, version, proto, o.Duration, o.Err)
 		md.TLSCipherSuite = o.TLS.CipherSuite
 		md.TLSVersion = o.TLS.Version
 	} else if o.DNS != nil {
-		msg = fmt.Sprintf("%s %s %s %s %s %v %s", o.ClientIP, o.Host, strings.TrimSuffix(o.DNS.Name, "."), o.DNS.Class, o.DNS.Type, o.Duration, o.Err)
+		host := o.Host
+		if host == "" {
+			host = "-"
+		}
+		msg = fmt.Sprintf("%s %s %s %s %s %v %s", o.ClientIP, host, strings.TrimSuffix(o.DNS.Name, "."), o.DNS.Class, o.DNS.Type, o.Duration, o.Err)
 		md.DNSQuestion = o.DNS.Question
 		md.DNSAnswer = o.DNS.Answer
 		md.DNSCached = fmt.Sprintf("%v", o.DNS.Cached)
