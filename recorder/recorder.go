@@ -122,6 +122,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		ClientIP: o.ClientIP,
 		Node:     o.Node,
 		SID:      o.SID,
+		Route:    o.Route,
 		Duration: strconv.FormatInt(o.Duration.Nanoseconds(), 10),
 		Ts:       o.Time,
 	}
@@ -269,6 +270,7 @@ type HandlerRecorderObject struct {
 	HTTP       *HTTPRecorderObject `json:"http,omitempty"`
 	DNS        *DNSRecorderObject  `json:"dns,omitempty"`
 	TLS        *TLSRecorderObject  `json:"tls,omitempty"`
+	Route      string              `json:"route,omitempty"`
 	Err        string              `json:"err,omitempty"`
 	Duration   time.Duration       `json:"duration"`
 	SID        string              `json:"sid"`
@@ -300,6 +302,7 @@ type lokiMetadata struct {
 	DNSQuestion        string    `json:"dns_question,omitempty"`
 	DNSAnswer          string    `json:"dns_answer,omitempty"`
 	DNSCached          string    `json:"dns_cached,omitempty"`
+	Route              string    `json:"route,omitempty"`
 	Error              string    `json:"error,omitempty"`
 	Duration           string    `json:"duration"`
 	Ts                 time.Time `json:"ts"`
