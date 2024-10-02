@@ -130,10 +130,36 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		md.Error = "true"
 	}
 
-	var msg string
+	clientIP := o.ClientIP
+	if clientIP == "" {
+		clientIP = "-"
+	}
+
+	host := o.Host
+	if host == "" {
+		host = "-"
+	}
+
+	msg := &bytes.Buffer{}
+	fmt.Fprintf(msg, "%s %s", clientIP, host)
+
+	if o.TLS != nil {
+		version := o.TLS.Version
+		if version == "" {
+			version = "-"
+		}
+		proto := o.TLS.Proto
+		if proto == "" {
+			proto = "-"
+		}
+
+		fmt.Fprintf(msg, " %s %s", version, proto)
+		md.TLSCipherSuite = o.TLS.CipherSuite
+		md.TLSVersion = o.TLS.Version
+	}
 	if o.HTTP != nil {
-		msg = fmt.Sprintf("%s %s %s %s %s %d %d %d %v %s",
-			o.ClientIP, o.HTTP.Method, o.HTTP.Host, o.HTTP.URI, o.HTTP.Proto, o.HTTP.StatusCode, o.HTTP.Request.ContentLength, o.HTTP.Response.ContentLength, o.Duration, o.Err)
+		fmt.Fprintf(msg, " %s %s %s %s %d %d %d",
+			o.HTTP.Method, o.HTTP.Host, o.HTTP.URI, o.HTTP.Proto, o.HTTP.StatusCode, o.HTTP.Request.ContentLength, o.HTTP.Response.ContentLength)
 
 		buf := bytes.Buffer{}
 		if h := o.HTTP.Request.Header; h != nil {
@@ -145,34 +171,17 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 			o.HTTP.Response.Header.Write(&buf)
 			md.HTTPResponseHeader = buf.String()
 		}
-	} else if o.TLS != nil {
-		host := o.Host
-		if host == "" {
-			host = "-"
-		}
-		version := o.TLS.Version
-		if version == "" {
-			version = "-"
-		}
-		proto := o.TLS.Proto
-		if proto == "" {
-			proto = "-"
-		}
-
-		msg = fmt.Sprintf("%s %s %s %s %v %s", o.ClientIP, host, version, proto, o.Duration, o.Err)
-		md.TLSCipherSuite = o.TLS.CipherSuite
-		md.TLSVersion = o.TLS.Version
-	} else if o.DNS != nil {
-		host := o.Host
-		if host == "" {
-			host = "-"
-		}
-		msg = fmt.Sprintf("%s %s %s %s %s %v %s", o.ClientIP, host, strings.TrimSuffix(o.DNS.Name, "."), o.DNS.Class, o.DNS.Type, o.Duration, o.Err)
+	}
+	if o.DNS != nil {
+		fmt.Fprintf(msg, " %s %s %s", strings.TrimSuffix(o.DNS.Name, "."), o.DNS.Class, o.DNS.Type)
 		md.DNSQuestion = o.DNS.Question
 		md.DNSAnswer = o.DNS.Answer
 		md.DNSCached = fmt.Sprintf("%v", o.DNS.Cached)
-	} else {
-		msg = fmt.Sprintf("%s %s %v %s", o.ClientIP, o.Host, o.Duration, o.Err)
+	}
+
+	fmt.Fprintf(msg, " %v", o.Duration)
+	if o.Err != "" {
+		fmt.Fprintf(msg, " %s", o.Err)
 	}
 
 	body := lokiBody{
@@ -265,6 +274,7 @@ type HandlerRecorderObject struct {
 	RemoteAddr string              `json:"remote"`
 	LocalAddr  string              `json:"local"`
 	Host       string              `json:"host"`
+	Proto      string              `json:"proto"`
 	ClientIP   string              `json:"clientIP"`
 	ClientID   string              `json:"clientID,omitempty"`
 	HTTP       *HTTPRecorderObject `json:"http,omitempty"`
@@ -272,8 +282,8 @@ type HandlerRecorderObject struct {
 	TLS        *TLSRecorderObject  `json:"tls,omitempty"`
 	Route      string              `json:"route,omitempty"`
 	Err        string              `json:"err,omitempty"`
-	Duration   time.Duration       `json:"duration"`
 	SID        string              `json:"sid"`
+	Duration   time.Duration       `json:"duration"`
 	Time       time.Time           `json:"time"`
 }
 
