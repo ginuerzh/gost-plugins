@@ -191,7 +191,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 				Values: [][]interface{}{
 					{
 						strconv.FormatInt(time.Now().UnixNano(), 10),
-						msg,
+						msg.String(),
 						md,
 					},
 				},
