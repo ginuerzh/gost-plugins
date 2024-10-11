@@ -153,7 +153,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 			proto = "-"
 		}
 
-		fmt.Fprintf(msg, " %s %s", version, proto)
+		fmt.Fprintf(msg, " %s %s %d %d", version, proto, o.InputBytes, o.OutputBytes)
 		md.TLSCipherSuite = o.TLS.CipherSuite
 		md.TLSVersion = o.TLS.Version
 	}
@@ -177,6 +177,10 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		md.DNSQuestion = o.DNS.Question
 		md.DNSAnswer = o.DNS.Answer
 		md.DNSCached = fmt.Sprintf("%v", o.DNS.Cached)
+	}
+
+	if o.TLS == nil && o.HTTP == nil {
+		fmt.Fprintf(msg, " %d %d", o.InputBytes, o.OutputBytes)
 	}
 
 	fmt.Fprintf(msg, " %v", o.Duration)
@@ -268,23 +272,25 @@ type DNSRecorderObject struct {
 }
 
 type HandlerRecorderObject struct {
-	Node       string              `json:"node,omitempty"`
-	Service    string              `json:"service"`
-	Network    string              `json:"network"`
-	RemoteAddr string              `json:"remote"`
-	LocalAddr  string              `json:"local"`
-	Host       string              `json:"host"`
-	Proto      string              `json:"proto"`
-	ClientIP   string              `json:"clientIP"`
-	ClientID   string              `json:"clientID,omitempty"`
-	HTTP       *HTTPRecorderObject `json:"http,omitempty"`
-	DNS        *DNSRecorderObject  `json:"dns,omitempty"`
-	TLS        *TLSRecorderObject  `json:"tls,omitempty"`
-	Route      string              `json:"route,omitempty"`
-	Err        string              `json:"err,omitempty"`
-	SID        string              `json:"sid"`
-	Duration   time.Duration       `json:"duration"`
-	Time       time.Time           `json:"time"`
+	Node        string              `json:"node,omitempty"`
+	Service     string              `json:"service"`
+	Network     string              `json:"network"`
+	RemoteAddr  string              `json:"remote"`
+	LocalAddr   string              `json:"local"`
+	Host        string              `json:"host"`
+	Proto       string              `json:"proto"`
+	ClientIP    string              `json:"clientIP"`
+	ClientID    string              `json:"clientID,omitempty"`
+	HTTP        *HTTPRecorderObject `json:"http,omitempty"`
+	DNS         *DNSRecorderObject  `json:"dns,omitempty"`
+	TLS         *TLSRecorderObject  `json:"tls,omitempty"`
+	Route       string              `json:"route,omitempty"`
+	InputBytes  uint64              `json:"inputBytes"`
+	OutputBytes uint64              `json:"outputBytes"`
+	Err         string              `json:"err,omitempty"`
+	SID         string              `json:"sid"`
+	Duration    time.Duration       `json:"duration"`
+	Time        time.Time           `json:"time"`
 }
 
 type lokiBody struct {
