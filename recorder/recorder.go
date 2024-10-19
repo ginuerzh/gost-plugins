@@ -159,7 +159,24 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		md.TLSCipherSuite = o.TLS.CipherSuite
 		md.TLSVersion = o.TLS.Version
 	}
-	if o.HTTP != nil {
+
+	if o.Websocket != nil {
+		fin := "fin"
+		if !o.Websocket.Fin {
+			fin = "fragment"
+		}
+		opcode := opcodes[o.Websocket.OpCode]
+		if opcode == "" {
+			opcode = "-"
+		}
+		mask := "unmask"
+		if o.Websocket.Masked {
+			mask = "mask"
+		}
+
+		fmt.Fprintf(msg, " %s %s %s %s %s %s %s %s %d",
+			o.HTTP.Method, o.HTTP.Host, o.HTTP.URI, "websocket", o.Websocket.From, fin, opcode, mask, o.Websocket.Length)
+	} else if o.HTTP != nil {
 		fmt.Fprintf(msg, " %s %s %s %s %d %d %d",
 			o.HTTP.Method, o.HTTP.Host, o.HTTP.URI, o.HTTP.Proto, o.HTTP.StatusCode, o.HTTP.Request.ContentLength, o.HTTP.Response.ContentLength)
 
@@ -229,6 +246,17 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 
 	return nil
 }
+
+var (
+	opcodes = map[int]string{
+		0:  "continuation",
+		1:  "text",
+		2:  "binary",
+		8:  "close",
+		9:  "ping",
+		10: "poing",
+	}
+)
 
 type HTTPRequestRecorderObject struct {
 	ContentLength int64       `json:"contentLength"`
