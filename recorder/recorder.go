@@ -119,6 +119,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 
 	md := lokiMetadata{
 		RemoteAddr: o.RemoteAddr,
+		Dst:        o.Dst,
 		ClientID:   o.ClientID,
 		ClientIP:   o.ClientIP,
 		Node:       o.Node,
@@ -292,6 +293,7 @@ type HandlerRecorderObject struct {
 	RemoteAddr  string                   `json:"remote"`
 	LocalAddr   string                   `json:"local"`
 	Host        string                   `json:"host"`
+	Dst         string                   `json:"dst,omitempty"`
 	Proto       string                   `json:"proto"`
 	ClientIP    string                   `json:"clientIP"`
 	ClientID    string                   `json:"clientID,omitempty"`
@@ -324,6 +326,7 @@ type lokiStreamObject struct {
 type lokiMetadata struct {
 	Node               string    `json:"node,omitempty"`
 	RemoteAddr         string    `json:"remote"`
+	Dst                string    `json:"dst,omitempty"`
 	ClientID           string    `json:"client_id,omitempty"`
 	ClientIP           string    `json:"client_ip"`
 	SID                string    `json:"sid"`
