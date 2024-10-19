@@ -118,13 +118,14 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 	}
 
 	md := lokiMetadata{
-		ClientID: o.ClientID,
-		ClientIP: o.ClientIP,
-		Node:     o.Node,
-		SID:      o.SID,
-		Route:    o.Route,
-		Duration: strconv.FormatInt(o.Duration.Nanoseconds(), 10),
-		Ts:       o.Time,
+		RemoteAddr: o.RemoteAddr,
+		ClientID:   o.ClientID,
+		ClientIP:   o.ClientIP,
+		Node:       o.Node,
+		SID:        o.SID,
+		Route:      o.Route,
+		Duration:   strconv.FormatInt(o.Duration.Nanoseconds(), 10),
+		Ts:         o.Time,
 	}
 	if o.Err != "" {
 		md.Error = "true"
@@ -251,6 +252,19 @@ type HTTPRecorderObject struct {
 	Response   HTTPResponseRecorderObject `json:"response"`
 }
 
+type WebsocketRecorderObject struct {
+	From    string `json:"from"`
+	Fin     bool   `json:"fin"`
+	Rsv1    bool   `json:"rsv1"`
+	Rsv2    bool   `json:"rsv2"`
+	Rsv3    bool   `json:"rsv3"`
+	OpCode  int    `json:"opcode"`
+	Masked  bool   `json:"masked"`
+	MaskKey uint32 `json:"maskKey"`
+	Length  int64  `json:"length"`
+	Payload []byte `json:"payload"`
+}
+
 type TLSRecorderObject struct {
 	ServerName        string `json:"serverName"`
 	CipherSuite       string `json:"cipherSuite"`
@@ -272,25 +286,26 @@ type DNSRecorderObject struct {
 }
 
 type HandlerRecorderObject struct {
-	Node        string              `json:"node,omitempty"`
-	Service     string              `json:"service"`
-	Network     string              `json:"network"`
-	RemoteAddr  string              `json:"remote"`
-	LocalAddr   string              `json:"local"`
-	Host        string              `json:"host"`
-	Proto       string              `json:"proto"`
-	ClientIP    string              `json:"clientIP"`
-	ClientID    string              `json:"clientID,omitempty"`
-	HTTP        *HTTPRecorderObject `json:"http,omitempty"`
-	DNS         *DNSRecorderObject  `json:"dns,omitempty"`
-	TLS         *TLSRecorderObject  `json:"tls,omitempty"`
-	Route       string              `json:"route,omitempty"`
-	InputBytes  uint64              `json:"inputBytes"`
-	OutputBytes uint64              `json:"outputBytes"`
-	Err         string              `json:"err,omitempty"`
-	SID         string              `json:"sid"`
-	Duration    time.Duration       `json:"duration"`
-	Time        time.Time           `json:"time"`
+	Node        string                   `json:"node,omitempty"`
+	Service     string                   `json:"service"`
+	Network     string                   `json:"network"`
+	RemoteAddr  string                   `json:"remote"`
+	LocalAddr   string                   `json:"local"`
+	Host        string                   `json:"host"`
+	Proto       string                   `json:"proto"`
+	ClientIP    string                   `json:"clientIP"`
+	ClientID    string                   `json:"clientID,omitempty"`
+	HTTP        *HTTPRecorderObject      `json:"http,omitempty"`
+	Websocket   *WebsocketRecorderObject `json:"websocket,omitempty"`
+	DNS         *DNSRecorderObject       `json:"dns,omitempty"`
+	TLS         *TLSRecorderObject       `json:"tls,omitempty"`
+	Route       string                   `json:"route,omitempty"`
+	InputBytes  uint64                   `json:"inputBytes"`
+	OutputBytes uint64                   `json:"outputBytes"`
+	Err         string                   `json:"err,omitempty"`
+	SID         string                   `json:"sid"`
+	Duration    time.Duration            `json:"duration"`
+	Time        time.Time                `json:"time"`
 }
 
 type lokiBody struct {
@@ -308,6 +323,7 @@ type lokiStreamObject struct {
 
 type lokiMetadata struct {
 	Node               string    `json:"node,omitempty"`
+	RemoteAddr         string    `json:"remote"`
 	ClientID           string    `json:"client_id,omitempty"`
 	ClientIP           string    `json:"client_ip"`
 	SID                string    `json:"sid"`
