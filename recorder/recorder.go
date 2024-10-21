@@ -254,7 +254,7 @@ var (
 		2:  "binary",
 		8:  "close",
 		9:  "ping",
-		10: "poing",
+		10: "pong",
 	}
 )
 

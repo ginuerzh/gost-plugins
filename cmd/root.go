@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ginuerzh/gost-plugins/ingress"
+	traffic "github.com/ginuerzh/gost-plugins/limiter/traffic"
 	"github.com/ginuerzh/gost-plugins/recorder"
 	"github.com/ginuerzh/gost-plugins/sd"
 	"github.com/spf13/cobra"
@@ -24,6 +25,9 @@ var (
 	lokiURL  string
 	lokiID   string
 	Timeout  time.Duration
+
+	limitIn  int
+	limitOut int
 
 	// log flags
 	logLevel  string
@@ -129,5 +133,19 @@ func init() {
 	recorderCmd.Flags().StringVar(&lokiID, "loki.id", "gost", "Loki tenant ID, the X-Scope-OrgID http request header")
 	recorderCmd.Flags().DurationVar(&Timeout, "timeout", 10*time.Second, "connection timeout")
 
-	rootCmd.AddCommand(ingressCmd, sdCmd, recorderCmd)
+	limiterCmd := &cobra.Command{
+		Use:   "limiter",
+		Short: "Limiter plugin",
+		Long:  "Limiter plugin HTTP service",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return traffic.ListenAndServe(addr, &traffic.Options{
+				LimitIn:  limitIn,
+				LimitOut: limitOut,
+			})
+		},
+	}
+	recorderCmd.Flags().IntVar(&limitIn, "limiter.in", 1048576, "input traffic limit")
+	recorderCmd.Flags().IntVar(&limitOut, "limiter.out", 1048576, "output traffic limit")
+
+	rootCmd.AddCommand(ingressCmd, sdCmd, recorderCmd, limiterCmd)
 }
