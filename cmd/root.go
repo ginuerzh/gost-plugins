@@ -144,8 +144,8 @@ func init() {
 			})
 		},
 	}
-	recorderCmd.Flags().IntVar(&limitIn, "limiter.in", 1048576, "input traffic limit")
-	recorderCmd.Flags().IntVar(&limitOut, "limiter.out", 1048576, "output traffic limit")
+	limiterCmd.Flags().IntVar(&limitIn, "limiter.in", 1048576, "input traffic limit")
+	limiterCmd.Flags().IntVar(&limitOut, "limiter.out", 1048576, "output traffic limit")
 
 	rootCmd.AddCommand(ingressCmd, sdCmd, recorderCmd, limiterCmd)
 }
