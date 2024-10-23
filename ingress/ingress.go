@@ -74,13 +74,13 @@ func (s *server) GetRule(ctx context.Context, in *ingress_proto.GetRuleRequest) 
 
 	reply := &ingress_proto.GetRuleReply{}
 
-	var key string
+	key := host
 	if strings.HasSuffix(host, s.opts.Domain) {
 		if n := strings.IndexByte(host, '.'); n > 0 {
 			key = host[:n]
 		}
-		reply.Endpoint, _ = s.client.Get(ctx, key).Result()
 	}
+	reply.Endpoint, _ = s.client.Get(ctx, key).Result()
 
 	slog.Debug(fmt.Sprintf("ingress: %s -> %s -> %s", in.Host, key, reply.Endpoint))
 	return reply, nil
