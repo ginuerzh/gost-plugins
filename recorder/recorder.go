@@ -145,7 +145,11 @@ func (s *server) pubRedis(ctx context.Context, o *HandlerRecorderObject) error {
 		return nil
 	}
 
-	_, err := s.redisClient.Publish(ctx, fmt.Sprintf("%s:%s", redisPubsubRecorderChannelPrefix, o.ClientID), o).Result()
+	v, err := json.Marshal(o)
+	if err != nil {
+		return err
+	}
+	_, err = s.redisClient.Publish(ctx, fmt.Sprintf("%s:%s", redisPubsubRecorderChannelPrefix, o.ClientID), v).Result()
 	return err
 }
 
