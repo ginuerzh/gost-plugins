@@ -18,6 +18,8 @@ import (
 type Options struct {
 	RedisAddr       string
 	RedisDB         int
+	RedisUsername   string
+	RedisPassword   string
 	RedisExpiration time.Duration
 	Domain          string
 }
@@ -38,8 +40,10 @@ func ListenAndServe(addr string, opts *Options) error {
 	s := grpc.NewServer()
 	srv := &server{
 		client: redis.NewClient(&redis.Options{
-			Addr: opts.RedisAddr,
-			DB:   opts.RedisDB,
+			Addr:     opts.RedisAddr,
+			DB:       opts.RedisDB,
+			Username: opts.RedisUsername,
+			Password: opts.RedisPassword,
 		}),
 		opts: opts,
 	}

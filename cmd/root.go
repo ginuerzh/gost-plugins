@@ -17,6 +17,8 @@ var (
 	addr            string
 	redisAddr       string
 	redisDB         int
+	redisUsername   string
+	redisPassword   string
 	redisExpiration time.Duration
 	domain          string
 
@@ -94,6 +96,8 @@ func init() {
 	}
 	ingressCmd.Flags().StringVar(&redisAddr, "redis.addr", "127.0.0.1:6379", "redis server address")
 	ingressCmd.Flags().IntVar(&redisDB, "redis.db", 0, "redis database")
+	ingressCmd.Flags().StringVar(&redisUsername, "redis.username", "", "redis username")
+	ingressCmd.Flags().StringVar(&redisPassword, "redis.password", "", "redis password")
 	ingressCmd.Flags().DurationVar(&redisExpiration, "redis.expiration", time.Hour, "redis key expiration")
 	ingressCmd.Flags().StringVar(&domain, "domain", "gost.plus", "domain name")
 
@@ -111,6 +115,8 @@ func init() {
 	}
 	sdCmd.Flags().StringVar(&redisAddr, "redis.addr", "127.0.0.1:6379", "redis server address")
 	sdCmd.Flags().IntVar(&redisDB, "redis.db", 0, "redis database")
+	sdCmd.Flags().StringVar(&redisUsername, "redis.username", "", "redis username")
+	sdCmd.Flags().StringVar(&redisPassword, "redis.password", "", "redis password")
 	sdCmd.Flags().DurationVar(&redisExpiration, "redis.expiration", time.Minute, "redis key expiration")
 
 	recorderCmd := &cobra.Command{
@@ -131,6 +137,10 @@ func init() {
 	recorderCmd.Flags().StringVar(&mongoDB, "mongo.db", "gost", "MongoDB database")
 	recorderCmd.Flags().StringVar(&lokiURL, "loki.url", "", "Loki URL, e.g. http://localhost:3100/loki/api/v1/push")
 	recorderCmd.Flags().StringVar(&lokiID, "loki.id", "gost", "Loki tenant ID, the X-Scope-OrgID http request header")
+	recorderCmd.Flags().StringVar(&redisAddr, "redis.addr", "127.0.0.1:6379", "redis server address")
+	recorderCmd.Flags().IntVar(&redisDB, "redis.db", 0, "redis database")
+	recorderCmd.Flags().StringVar(&redisUsername, "redis.username", "", "redis username")
+	recorderCmd.Flags().StringVar(&redisPassword, "redis.password", "", "redis password")
 	recorderCmd.Flags().DurationVar(&Timeout, "timeout", 10*time.Second, "connection timeout")
 
 	limiterCmd := &cobra.Command{

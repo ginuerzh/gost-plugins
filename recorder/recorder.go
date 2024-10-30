@@ -14,21 +14,34 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+const (
+	redisPubsubRecorderChannelPrefix = "gost:pubsub:recorder:channel"
 )
 
 type Options struct {
 	MongoURI string
 	MongoDB  string
-	LokiURL  string
-	LokiID   string
-	Timeout  time.Duration
+
+	LokiURL string
+	LokiID  string
+
+	RedisAddr     string
+	RedisDB       int
+	RedisUsername string
+	RedisPassword string
+
+	Timeout time.Duration
 }
 
 type server struct {
 	lokiClient  *http.Client
 	mongoClient *mongo.Client
+	redisClient *redis.Client
 	opts        *Options
 }
 
@@ -64,6 +77,15 @@ func ListenAndServe(addr string, opts *Options) error {
 		srv.lokiClient = &http.Client{
 			Timeout: opts.Timeout,
 		}
+	}
+
+	if opts.RedisAddr != "" {
+		srv.redisClient = redis.NewClient(&redis.Options{
+			Addr:     opts.RedisAddr,
+			DB:       opts.RedisDB,
+			Username: opts.RedisUsername,
+			Password: opts.RedisPassword,
+		})
 	}
 
 	mux := http.NewServeMux()
@@ -110,6 +132,21 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	if err := s.pubRedis(r.Context(), &o); err != nil {
+		slog.Error(fmt.Sprintf("redis %s: %v", o.SID, err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *server) pubRedis(ctx context.Context, o *HandlerRecorderObject) error {
+	if s.redisClient == nil || o == nil {
+		return nil
+	}
+
+	_, err := s.redisClient.Publish(ctx, fmt.Sprintf("%s:%s", redisPubsubRecorderChannelPrefix, o.ClientID), o).Result()
+	return err
 }
 
 func (s *server) pushLoki(o *HandlerRecorderObject) error {
