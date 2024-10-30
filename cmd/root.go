@@ -89,6 +89,8 @@ func init() {
 			return ingress.ListenAndServe(addr, &ingress.Options{
 				RedisAddr:       redisAddr,
 				RedisDB:         redisDB,
+				RedisUsername:   redisUsername,
+				RedisPassword:   redisPassword,
 				RedisExpiration: redisExpiration,
 				Domain:          domain,
 			})
@@ -109,6 +111,8 @@ func init() {
 			return sd.ListenAndServe(addr, &sd.Options{
 				RedisAddr:       redisAddr,
 				RedisDB:         redisDB,
+				RedisUsername:   redisUsername,
+				RedisPassword:   redisPassword,
 				RedisExpiration: redisExpiration,
 			})
 		},
@@ -125,11 +129,15 @@ func init() {
 		Long:  "Recorder plugin HTTP service",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return recorder.ListenAndServe(addr, &recorder.Options{
-				MongoURI: mongoURI,
-				MongoDB:  mongoDB,
-				LokiURL:  lokiURL,
-				LokiID:   lokiID,
-				Timeout:  Timeout,
+				MongoURI:      mongoURI,
+				MongoDB:       mongoDB,
+				LokiURL:       lokiURL,
+				LokiID:        lokiID,
+				RedisAddr:     redisAddr,
+				RedisDB:       redisDB,
+				RedisUsername: redisUsername,
+				RedisPassword: redisPassword,
+				Timeout:       Timeout,
 			})
 		},
 	}
