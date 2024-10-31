@@ -117,6 +117,10 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if o.Redirect != "" {
+		slog.Debug(fmt.Sprintf("%s redirect from %s, ignored", o.SID, o.Redirect))
+		return
+	}
 
 	if s.mongoClient != nil {
 		col := s.mongoClient.Database(s.opts.MongoDB).Collection("recorders")
@@ -373,6 +377,7 @@ type HandlerRecorderObject struct {
 	Route       string                   `json:"route,omitempty"`
 	InputBytes  uint64                   `json:"inputBytes"`
 	OutputBytes uint64                   `json:"outputBytes"`
+	Redirect    string                   `json:"redirect,omitempty"`
 	Err         string                   `json:"err,omitempty"`
 	SID         string                   `json:"sid"`
 	Duration    time.Duration            `json:"duration"`
