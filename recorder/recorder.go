@@ -118,7 +118,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if o.Redirect != "" {
-		slog.Debug(fmt.Sprintf("%s redirect from %s, ignored", o.SID, o.Redirect))
+		slog.Debug(fmt.Sprintf("%s: redirect from %s to %s ignored", o.SID, o.Node, o.Redirect))
 		return
 	}
 

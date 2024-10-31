@@ -145,7 +145,7 @@ func init() {
 	recorderCmd.Flags().StringVar(&mongoDB, "mongo.db", "gost", "MongoDB database")
 	recorderCmd.Flags().StringVar(&lokiURL, "loki.url", "", "Loki URL, e.g. http://localhost:3100/loki/api/v1/push")
 	recorderCmd.Flags().StringVar(&lokiID, "loki.id", "gost", "Loki tenant ID, the X-Scope-OrgID http request header")
-	recorderCmd.Flags().StringVar(&redisAddr, "redis.addr", "127.0.0.1:6379", "redis server address")
+	recorderCmd.Flags().StringVar(&redisAddr, "redis.addr", "", "redis server address")
 	recorderCmd.Flags().IntVar(&redisDB, "redis.db", 0, "redis database")
 	recorderCmd.Flags().StringVar(&redisUsername, "redis.username", "", "redis username")
 	recorderCmd.Flags().StringVar(&redisPassword, "redis.password", "", "redis password")
