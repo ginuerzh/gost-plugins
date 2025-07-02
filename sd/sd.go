@@ -71,7 +71,7 @@ func (s *server) Register(ctx context.Context, in *sd_proto.RegisterRequest) (*s
 		return nil, status.Error(codes.InvalidArgument, "invalid args")
 	}
 
-	log := slog.With("op", "register", "tunnel", srv.Name, "connector", srv.Id, "node", srv.Node, "network", srv.Network, "address", srv.Address)
+	log := slog.With("op", "register", "name", srv.Name, "connector", srv.Id, "node", srv.Node, "network", srv.Network, "address", srv.Address)
 
 	var addr net.Addr
 	var err error
@@ -116,7 +116,7 @@ func (s *server) Register(ctx context.Context, in *sd_proto.RegisterRequest) (*s
 
 	s.client.Expire(ctx, srv.Name, s.opts.RedisExpiration)
 
-	log.Info(fmt.Sprintf("register tunnel=%s, connector=%s, address=%s/%s", srv.Name, srv.Id, sv.Address, sv.Network))
+	log.Info(fmt.Sprintf("register name=%s, connector=%s, address=%s/%s", srv.Name, srv.Id, sv.Address, sv.Network))
 	reply.Ok = true
 
 	return reply, nil
@@ -130,13 +130,13 @@ func (s *server) Deregister(ctx context.Context, in *sd_proto.DeregisterRequest)
 		return reply, nil
 	}
 
-	log := slog.With("op", "deregister", "tunnel", srv.Name, "connector", srv.Id, "node", srv.Node)
+	log := slog.With("op", "deregister", "name", srv.Name, "connector", srv.Id, "node", srv.Node)
 
 	if _, err := s.client.HDel(ctx, srv.Name, srv.Id).Result(); err != nil {
 		log.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	log.Info(fmt.Sprintf("deregister tunnel=%s, connector=%s", srv.Id, srv.Name))
+	log.Info(fmt.Sprintf("deregister name=%s, connector=%s", srv.Name, srv.Id))
 
 	reply.Ok = true
 
@@ -151,7 +151,7 @@ func (s *server) Renew(ctx context.Context, in *sd_proto.RenewRequest) (*sd_prot
 		return reply, nil
 	}
 
-	log := slog.With("op", "renew", "tunnel", srv.Name, "connector", srv.Id, "node", srv.Node)
+	log := slog.With("op", "renew", "name", srv.Name, "connector", srv.Id, "node", srv.Node)
 
 	v, err := s.client.HGet(ctx, srv.Name, srv.Id).Bytes()
 	if err != nil {
@@ -185,7 +185,7 @@ func (s *server) Renew(ctx context.Context, in *sd_proto.RenewRequest) (*sd_prot
 
 	s.client.Expire(ctx, srv.Name, s.opts.RedisExpiration)
 
-	log.Info(fmt.Sprintf("renew tunnel=%s, connector=%s", srv.Name, srv.Id))
+	log.Info(fmt.Sprintf("renew name=%s, connector=%s", srv.Name, srv.Id))
 	reply.Ok = true
 
 	return reply, nil
@@ -198,7 +198,7 @@ func (s *server) Get(ctx context.Context, in *sd_proto.GetServiceRequest) (*sd_p
 		return reply, nil
 	}
 
-	log := slog.With("op", "get", "tunnel", in.Name)
+	log := slog.With("op", "get", "name", in.Name)
 
 	m, err := s.client.HGetAll(ctx, in.Name).Result()
 	if err != nil {

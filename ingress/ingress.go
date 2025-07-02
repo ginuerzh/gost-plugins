@@ -65,8 +65,19 @@ func (s *server) SetRule(ctx context.Context, in *ingress_proto.SetRuleRequest) 
 		host = v
 	}
 
-	s.client.SetNX(ctx, host, tid.String(), s.opts.RedisExpiration)
-	slog.Debug(fmt.Sprintf("set: %s -> %s -> %s", in.Host, host, tid.String()))
+	ok, err := s.client.SetNX(ctx, host, tid.String(), s.opts.RedisExpiration).Result()
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, err
+	}
+	if ok {
+		slog.Debug(fmt.Sprintf("set: %s -> %s -> %s", in.Host, host, tid.String()))
+		reply.Ok = true
+	} else {
+		if v, _ := s.client.Get(ctx, host).Result(); v == in.Endpoint {
+			reply.Ok = true
+		}
+	}
 	return reply, nil
 }
 
