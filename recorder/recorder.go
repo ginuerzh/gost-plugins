@@ -163,6 +163,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 	}
 
 	md := lokiMetadata{
+		Network:    o.Network,
 		RemoteAddr: o.RemoteAddr,
 		Host:       o.Host,
 		Src:        o.Src,
@@ -402,6 +403,7 @@ type lokiStreamObject struct {
 
 type lokiMetadata struct {
 	Node               string    `json:"node,omitempty"`
+	Network            string    `json:"network"`
 	RemoteAddr         string    `json:"remote"`
 	Host               string    `json:"host"`
 	Src                string    `json:"src"`
