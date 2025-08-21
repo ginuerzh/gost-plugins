@@ -164,13 +164,13 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 
 	md := lokiMetadata{
 		Network:    o.Network,
+		Proto:      o.Proto,
 		RemoteAddr: o.RemoteAddr,
 		ClientAddr: o.ClientAddr,
 		Host:       o.Host,
 		Src:        o.SrcAddr,
 		Dst:        o.DstAddr,
 		ClientID:   o.ClientID,
-		ClientIP:   o.ClientIP,
 		Node:       o.Node,
 		SID:        o.SID,
 		Route:      o.Route,
@@ -181,9 +181,9 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		md.Error = "true"
 	}
 
-	clientIP := o.ClientIP
-	if clientIP == "" {
-		clientIP = "-"
+	clientAddr := o.ClientAddr
+	if clientAddr == "" {
+		clientAddr = "-"
 	}
 
 	host := o.Host
@@ -192,7 +192,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 	}
 
 	msg := &bytes.Buffer{}
-	fmt.Fprintf(msg, "%s %s", clientIP, host)
+	fmt.Fprintf(msg, "%s %s", clientAddr, host)
 
 	if o.TLS != nil {
 		version := o.TLS.Version
@@ -412,7 +412,7 @@ type lokiMetadata struct {
 	Src                string    `json:"src"`
 	Dst                string    `json:"dst,omitempty"`
 	ClientID           string    `json:"client_id,omitempty"`
-	ClientIP           string    `json:"client_ip"`
+	Proto              string    `json:"proto,omitempty"`
 	SID                string    `json:"sid"`
 	HTTPRequestHeader  string    `json:"http_request_header,omitempty"`
 	HTTPResponseHeader string    `json:"http_response_header,omitempty"`
