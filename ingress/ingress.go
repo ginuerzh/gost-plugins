@@ -21,7 +21,8 @@ type Options struct {
 	RedisUsername   string
 	RedisPassword   string
 	RedisExpiration time.Duration
-	Domain          string
+	Domains         []string
+	MinDomain       int
 }
 
 type server struct {
@@ -64,6 +65,9 @@ func (s *server) SetRule(ctx context.Context, in *ingress_proto.SetRuleRequest) 
 	if v, _, _ := net.SplitHostPort(in.Host); v != "" {
 		host = v
 	}
+	if len(host) < s.opts.MinDomain {
+		return reply, nil
+	}
 
 	ok, err := s.client.SetNX(ctx, host, tid.String(), s.opts.RedisExpiration).Result()
 	if err != nil {
@@ -90,12 +94,16 @@ func (s *server) GetRule(ctx context.Context, in *ingress_proto.GetRuleRequest) 
 	reply := &ingress_proto.GetRuleReply{}
 
 	key := host
-	if strings.HasSuffix(host, s.opts.Domain) {
-		if n := strings.IndexByte(host, '.'); n > 0 {
-			key = host[:n]
+	for _, domain := range s.opts.Domains {
+		if strings.HasSuffix(host, domain) {
+			if n := strings.IndexByte(host, '.'); n > 0 {
+				key = host[:n]
+			}
 		}
 	}
-	reply.Endpoint, _ = s.client.Get(ctx, key).Result()
+	if len(key) >= s.opts.MinDomain {
+		reply.Endpoint, _ = s.client.Get(ctx, key).Result()
+	}
 
 	slog.Debug(fmt.Sprintf("ingress: %s -> %s -> %s", in.Host, key, reply.Endpoint))
 	return reply, nil

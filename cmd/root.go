@@ -21,6 +21,7 @@ var (
 	redisPassword   string
 	redisExpiration time.Duration
 	domain          string
+	minDomain       int
 
 	mongoURI string
 	mongoDB  string
@@ -92,7 +93,8 @@ func init() {
 				RedisUsername:   redisUsername,
 				RedisPassword:   redisPassword,
 				RedisExpiration: redisExpiration,
-				Domain:          domain,
+				Domains:         strings.Split(domain, ","),
+				MinDomain:       minDomain,
 			})
 		},
 	}
@@ -101,7 +103,8 @@ func init() {
 	ingressCmd.Flags().StringVar(&redisUsername, "redis.username", "", "redis username")
 	ingressCmd.Flags().StringVar(&redisPassword, "redis.password", "", "redis password")
 	ingressCmd.Flags().DurationVar(&redisExpiration, "redis.expiration", time.Hour, "redis key expiration")
-	ingressCmd.Flags().StringVar(&domain, "domain", "gost.plus", "domain name")
+	ingressCmd.Flags().StringVar(&domain, "domain", "gost.run", "domain name or comma separated domain list")
+	ingressCmd.Flags().IntVar(&minDomain, "domain.min", 1, "minimum length of domain prefix")
 
 	sdCmd := &cobra.Command{
 		Use:   "sd",
