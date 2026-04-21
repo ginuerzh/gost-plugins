@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.5.0 AS xx
 
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine3.23 AS builder
 
 COPY --from=xx / /
 
@@ -19,7 +19,7 @@ COPY . .
 RUN xx-go build && \
     xx-verify gost-plugins
 
-FROM alpine:3.20
+FROM alpine:3.23
 
 WORKDIR /bin/
 
