@@ -229,6 +229,8 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 		fmt.Fprintf(msg, " %s %s %s %s %d %d %d",
 			o.HTTP.Method, o.HTTP.Host, o.HTTP.URI, o.HTTP.Proto, o.HTTP.StatusCode, o.HTTP.Request.ContentLength, o.HTTP.Response.ContentLength)
 
+		md.Uri = o.HTTP.URI
+
 		buf := bytes.Buffer{}
 		if h := o.HTTP.Request.Header; h != nil {
 			o.HTTP.Request.Header.Write(&buf)
@@ -409,6 +411,7 @@ type lokiMetadata struct {
 	RemoteAddr         string    `json:"remote"`
 	ClientAddr         string    `json:"client"`
 	Host               string    `json:"host"`
+	Uri                string    `json:"uri"`
 	Src                string    `json:"src"`
 	Dst                string    `json:"dst,omitempty"`
 	ClientID           string    `json:"client_id,omitempty"`
