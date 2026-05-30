@@ -68,7 +68,7 @@ func ListenAndServe(addr string, opts *Options) error {
 		if err != nil {
 			return err
 		}
-		defer client.Disconnect(ctx)
+		defer client.Disconnect(context.Background())
 
 		srv.mongoClient = client
 	}

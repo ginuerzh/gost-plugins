@@ -32,6 +32,10 @@ type server struct {
 }
 
 func ListenAndServe(addr string, opts *Options) error {
+	if opts == nil {
+		opts = &Options{}
+	}
+
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
@@ -48,6 +52,7 @@ func ListenAndServe(addr string, opts *Options) error {
 		}),
 		opts: opts,
 	}
+	defer srv.client.Close()
 
 	ingress_proto.RegisterIngressServer(s, srv)
 	return s.Serve(ln)
@@ -78,7 +83,9 @@ func (s *server) SetRule(ctx context.Context, in *ingress_proto.SetRuleRequest) 
 		slog.Debug(fmt.Sprintf("set: %s -> %s -> %s", in.Host, host, tid.String()))
 		reply.Ok = true
 	} else {
-		if v, _ := s.client.Get(ctx, host).Result(); v == in.Endpoint {
+		if v, err := s.client.Get(ctx, host).Result(); err != nil {
+			slog.Error(fmt.Sprintf("get: %v", err))
+		} else if v == in.Endpoint {
 			reply.Ok = true
 		}
 	}
@@ -102,7 +109,11 @@ func (s *server) GetRule(ctx context.Context, in *ingress_proto.GetRuleRequest) 
 		}
 	}
 	if len(key) >= s.opts.MinDomain {
-		reply.Endpoint, _ = s.client.Get(ctx, key).Result()
+		var err error
+		reply.Endpoint, err = s.client.Get(ctx, key).Result()
+		if err != nil {
+			slog.Error(fmt.Sprintf("get: %v", err))
+		}
 	}
 
 	slog.Debug(fmt.Sprintf("ingress: %s -> %s -> %s", in.Host, key, reply.Endpoint))
@@ -118,10 +129,14 @@ func parseTunnelID(s string) (tid relay.TunnelID) {
 		private = true
 		s = s[1:]
 	}
-	uuid, _ := uuid.Parse(s)
+	uid, err := uuid.Parse(s)
+	if err != nil {
+		slog.Warn(fmt.Sprintf("parse tunnel ID: %v", err))
+		return
+	}
 
 	if private {
-		return relay.NewPrivateTunnelID(uuid[:])
+		return relay.NewPrivateTunnelID(uid[:])
 	}
-	return relay.NewTunnelID(uuid[:])
+	return relay.NewTunnelID(uid[:])
 }
