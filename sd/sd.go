@@ -27,6 +27,7 @@ type service struct {
 	Renew int64
 }
 
+// Options configures the SD server's Redis backend.
 type Options struct {
 	RedisAddr       string
 	RedisDB         int
@@ -41,22 +42,29 @@ type server struct {
 	opts *Options
 }
 
+// ListenAndServe starts the SD gRPC server on addr using the given Redis-backed options.
 func ListenAndServe(addr string, opts *Options) error {
+	if opts == nil {
+		opts = &Options{}
+	}
+
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
 	slog.Info(fmt.Sprintf("server listening on %v", ln.Addr()))
 
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     opts.RedisAddr,
+		DB:       opts.RedisDB,
+		Username: opts.RedisUsername,
+		Password: opts.RedisPassword,
+	})
+
 	s := grpc.NewServer()
 	srv := &server{
-		client: redis.NewClient(&redis.Options{
-			Addr:     opts.RedisAddr,
-			DB:       opts.RedisDB,
-			Username: opts.RedisUsername,
-			Password: opts.RedisPassword,
-		}),
-		opts: opts,
+		client: rdb,
+		opts:   opts,
 	}
 
 	sd_proto.RegisterSDServer(s, srv)
@@ -114,7 +122,9 @@ func (s *server) Register(ctx context.Context, in *sd_proto.RegisterRequest) (*s
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	s.client.Expire(ctx, srv.Name, s.opts.RedisExpiration)
+	if _, err := s.client.Expire(ctx, srv.Name, s.opts.RedisExpiration).Result(); err != nil {
+		log.Error("expire", "err", err)
+	}
 
 	log.Info(fmt.Sprintf("register name=%s, connector=%s, address=%s/%s", srv.Name, srv.Id, sv.Address, sv.Network))
 	reply.Ok = true
@@ -127,7 +137,7 @@ func (s *server) Deregister(ctx context.Context, in *sd_proto.DeregisterRequest)
 
 	srv := in.GetService()
 	if srv == nil || srv.Id == "" || srv.Name == "" {
-		return reply, nil
+		return nil, status.Error(codes.InvalidArgument, "invalid args")
 	}
 
 	log := slog.With("op", "deregister", "name", srv.Name, "connector", srv.Id, "node", srv.Node)
@@ -148,7 +158,7 @@ func (s *server) Renew(ctx context.Context, in *sd_proto.RenewRequest) (*sd_prot
 
 	srv := in.GetService()
 	if srv == nil || srv.Id == "" || srv.Name == "" {
-		return reply, nil
+		return nil, status.Error(codes.InvalidArgument, "invalid args")
 	}
 
 	log := slog.With("op", "renew", "name", srv.Name, "connector", srv.Id, "node", srv.Node)
@@ -168,22 +178,20 @@ func (s *server) Renew(ctx context.Context, in *sd_proto.RenewRequest) (*sd_prot
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	/*
-		// expired
-		if time.Since(time.Unix(sv.Renew, 0)) > s.opts.RedisExpiration {
-			return reply, nil
-		}
-	*/
-
 	sv.Renew = time.Now().Unix()
-	v, _ = json.Marshal(sv)
+	if v, err = json.Marshal(sv); err != nil {
+		log.Error(err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	if _, err := s.client.HSet(ctx, srv.Name, srv.Id, v).Result(); err != nil {
 		log.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	s.client.Expire(ctx, srv.Name, s.opts.RedisExpiration)
+	if _, err := s.client.Expire(ctx, srv.Name, s.opts.RedisExpiration).Result(); err != nil {
+		log.Error("expire", "err", err)
+	}
 
 	log.Info(fmt.Sprintf("renew name=%s, connector=%s", srv.Name, srv.Id))
 	reply.Ok = true
