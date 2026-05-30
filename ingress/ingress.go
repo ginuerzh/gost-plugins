@@ -13,8 +13,11 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
+// Options configures the ingress server's Redis backend and domain routing.
 type Options struct {
 	RedisAddr       string
 	RedisDB         int
@@ -31,6 +34,7 @@ type server struct {
 	opts *Options
 }
 
+// ListenAndServe starts the ingress gRPC server on addr using the given Redis-backed options.
 func ListenAndServe(addr string, opts *Options) error {
 	if opts == nil {
 		opts = &Options{}
@@ -63,7 +67,7 @@ func (s *server) SetRule(ctx context.Context, in *ingress_proto.SetRuleRequest) 
 
 	tid := parseTunnelID(in.Endpoint)
 	if in.Host == "" || tid.IsZero() {
-		return reply, nil
+		return nil, status.Error(codes.InvalidArgument, "invalid args")
 	}
 
 	host := in.Host
@@ -77,7 +81,7 @@ func (s *server) SetRule(ctx context.Context, in *ingress_proto.SetRuleRequest) 
 	ok, err := s.client.SetNX(ctx, host, tid.String(), s.opts.RedisExpiration).Result()
 	if err != nil {
 		slog.Error(err.Error())
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if ok {
 		slog.Debug(fmt.Sprintf("set: %s -> %s -> %s", in.Host, host, tid.String()))
@@ -112,7 +116,11 @@ func (s *server) GetRule(ctx context.Context, in *ingress_proto.GetRuleRequest) 
 		var err error
 		reply.Endpoint, err = s.client.Get(ctx, key).Result()
 		if err != nil {
+			if err == redis.Nil {
+				return reply, nil
+			}
 			slog.Error(fmt.Sprintf("get: %v", err))
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
 
