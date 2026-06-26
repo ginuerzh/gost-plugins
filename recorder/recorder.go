@@ -122,6 +122,17 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	switch {
+	case o.Websocket != nil:
+		o.Type = "websocket"
+	case o.DNS != nil:
+		o.Type = "dns"
+	case o.HTTP != nil:
+		o.Type = "http"
+	case o.TLS != nil:
+		o.Type = "tls"
+	}
+
 	if s.mongoClient != nil {
 		col := s.mongoClient.Database(s.opts.MongoDB).Collection("recorders")
 		if _, err := col.InsertOne(r.Context(), o); err != nil {
@@ -378,6 +389,7 @@ type HandlerRecorderObject struct {
 	Proto       string                   `json:"proto"`
 	ClientIP    string                   `json:"clientIP"`
 	ClientID    string                   `json:"clientID,omitempty"`
+	Type        string                   `json:"type,omitempty" bson:"type,omitempty"`
 	HTTP        *HTTPRecorderObject      `json:"http,omitempty"`
 	Websocket   *WebsocketRecorderObject `json:"websocket,omitempty"`
 	DNS         *DNSRecorderObject       `json:"dns,omitempty"`
