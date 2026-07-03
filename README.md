@@ -144,10 +144,45 @@ recorders:
 
 ## Docker
 
+The official image is published on Docker Hub as [`ginuerzh/gost-plugins`](https://hub.docker.com/r/ginuerzh/gost-plugins):
+
+```bash
+docker pull ginuerzh/gost-plugins
+```
+
+Run any subcommand directly:
+
+```bash
+docker run ginuerzh/gost-plugins ingress --addr :8000 --redis.addr 127.0.0.1:6379
+docker run ginuerzh/gost-plugins sd --addr :8000 --redis.addr 127.0.0.1:6379
+docker run ginuerzh/gost-plugins recorder --addr :8000 --mongo.uri mongodb://host.docker.internal:27017
+docker run ginuerzh/gost-plugins limiter --addr :8000
+```
+
+Build locally:
+
 ```bash
 docker build -t gost-plugins .
 docker run gost-plugins <subcommand> [flags]
 ```
+
+### docker-compose
+
+Run GOST with the ingress plugin:
+
+```yaml
+version: "3"
+services:
+  gost:
+    image: gogost/gost
+    command: -C /etc/gost/gost.yml
+    volumes:
+      - ./gost.yml:/etc/gost/gost.yml
+  plugins:
+    image: ginuerzh/gost-plugins
+    command: ingress --addr :8000 --redis.addr redis:6379
+  redis:
+    image: redis:7-alpine
 
 ## License
 
