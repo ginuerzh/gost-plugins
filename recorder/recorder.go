@@ -341,6 +341,11 @@ type HTTPRecorderObject struct {
 	StatusCode int                        `json:"statusCode"`
 	Request    HTTPRequestRecorderObject  `json:"request"`
 	Response   HTTPResponseRecorderObject `json:"response"`
+
+	OriginalHost     string                      `json:"originalHost,omitempty"`
+	OriginalURI      string                      `json:"originalUri,omitempty"`
+	OriginalRequest  *HTTPRequestRecorderObject  `json:"originalRequest,omitempty"`
+	OriginalResponse *HTTPResponseRecorderObject `json:"originalResponse,omitempty"`
 }
 
 type WebsocketRecorderObject struct {
