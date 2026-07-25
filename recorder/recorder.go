@@ -272,7 +272,7 @@ func (s *server) pushLoki(o *HandlerRecorderObject) error {
 	body := lokiBody{
 		Streams: []lokiStream{
 			{
-				Stream: lokiStreamObject{Service: o.Service},
+				Stream: lokiStreamObject{Service: o.Service, Node: o.Node},
 				Values: [][]interface{}{
 					{
 						strconv.FormatInt(time.Now().UnixNano(), 10),
@@ -420,6 +420,7 @@ type lokiStream struct {
 
 type lokiStreamObject struct {
 	Service string `json:"service_name"`
+	Node    string `json:"node,omitempty"`
 }
 
 type lokiMetadata struct {
